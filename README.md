@@ -14,5 +14,5 @@ skill.
 
 The earliest iterations of this project will be able to catch some books that perhaps do not belong in categories or obviously violate
 content standards. There is a window of content that is flagged manually and this window encompasses essentially all of the content that
-should be flagged. With further iterations the window of content flagged automatically should increase in size, reducing time spent reading books
-that violate content standards.
+should be flagged. With further iterations the window of content flagged automatically should approach the size of the window of content 
+manually flagged, reducing time spent reading books that violate content standards.
