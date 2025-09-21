@@ -1,5 +1,6 @@
 # Project Specific
 lists/*.csv
+pdfs/*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
