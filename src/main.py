@@ -15,7 +15,7 @@ def read_flagged_words_csvs(directory: str):
         with open(csv_file, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             for row in reader:
-                if row:  # skip empty lines
+                if row and row[0].strip() != "":  # skip empty lines
                     terms[category].add(row[0].strip().lower())
 
     return terms
