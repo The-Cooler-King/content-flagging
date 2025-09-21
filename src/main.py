@@ -50,21 +50,23 @@ def extract_text_from_pdfs(directory: str):
 
 def search_for_words(pdf_texts, words_to_flag):
     flags = {}
-    for pdf_file in pdf_texts.values():
-        for page_number, page_text in enumerate(pdf_file):
+    for pdf_file, content in pdf_texts.items():
+        for page_number, page_text in enumerate(content):
             for word in page_text:
                 for category, word_list in words_to_flag.items():
 
                     if word in word_list:
 
-                        if category not in flags:
-                            flags[category] = {}
-                        if word_list[word] not in flags[category]:
-                            flags[category][word_list[word]] = {}
-                        if word in flags[category][word_list[word]]:
-                            flags[category][word_list[word]][word].append(page_number + 1)
+                        if pdf_file not in flags:
+                            flags[pdf_file] = {}
+                        if category not in flags[pdf_file]:
+                            flags[pdf_file][category] = {}
+                        if word_list[word] not in flags[pdf_file][category]:
+                            flags[pdf_file][category][word_list[word]] = {}
+                        if word in flags[pdf_file][category][word_list[word]]:
+                            flags[pdf_file][category][word_list[word]][word].append(page_number + 1)
                         else:
-                            flags[category][word_list[word]][word] = [page_number + 1]
+                            flags[pdf_file][category][word_list[word]][word] = [page_number + 1]
 
     return flags
 
@@ -77,36 +79,39 @@ def generate_report(results: dict) -> str:
     """
     lines = []
 
-    for category, subcategories in results.items():
-        # Count all instances in this category
-        cat_count = sum(len(pages) for sub in subcategories.values() for pages in sub.values())
-        lines.append(f"Category: ({cat_count} instance(s))")
+    for pdf_file, categories in results.items():
+        lines.append(f"PDF: {pdf_file}")
 
-        for subcategory, words in subcategories.items():
-            # Count all instances in this subcategory
-            sub_count = sum(len(pages) for pages in words.values())
-            lines.append(f" - {subcategory}: ({sub_count} instance(s))")
+        for category, subcategories in categories.items():
+            # Count all instances in this category
+            cat_count = sum(len(pages) for sub in subcategories.values() for pages in sub.values())
+            lines.append(f"{category}: ({cat_count} instance(s))")
 
-            for word, pages in words.items():
-                if pages:
-                    page_list = ", ".join(str(p) for p in pages)
-                    lines.append(f"   - {word}: {page_list}")
-                else:
-                    lines.append(f"   - {word}: (no occurrences)")
+            for subcategory, words in subcategories.items():
+                # Count all instances in this subcategory
+                sub_count = sum(len(pages) for pages in words.values())
+                lines.append(f" - {subcategory}: ({sub_count} instance(s))")
+
+                for word, pages in words.items():
+                    if pages:
+                        page_list = ", ".join(str(p) for p in pages)
+                        lines.append(f"   - {word}: {page_list}")
+                    else:
+                        lines.append(f"   - {word}: (no occurrences)")
 
     return "\n".join(lines)
 
+
+# print(read_flagged_words_csvs("../lists"))
+# print(extract_text_from_pdfs("../pdfs"))
 
 results = search_for_words(
     pdf_texts=extract_text_from_pdfs("../pdfs"),
     words_to_flag=read_flagged_words_csvs("../lists")
 )
 
-print(results)
-
 report = generate_report(results=results)
 
 print(report)
 
 
-# print(read_flagged_words_csvs("../lists"))
