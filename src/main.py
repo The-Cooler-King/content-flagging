@@ -2,7 +2,7 @@ import csv
 import pathlib
 import pdfplumber
 import re
-
+from itertools import groupby
 
 
 def read_flagged_words_csvs(directory: str):
@@ -71,6 +71,22 @@ def search_for_words(pdf_texts, words_to_flag):
     return flags
 
 
+def compress_page_list(page_numbers):
+    page_numbers = sorted(page_numbers)  # ensures duplicates are consecutive
+    result = []
+    for num, group in groupby(page_numbers):
+        count = sum(1 for _ in group)  # count items in the group
+        if count > 1:
+            result.append(f"{num}({count})")
+        else:
+            result.append(str(num))
+    return result
+
+
+nums = [1, 1, 1, 2, 452, 452, 500]
+print(compress_page_list(nums))
+
+
 def generate_report(results: dict) -> str:
     """
     Generate a plain text report from nested dictionary results.
@@ -94,6 +110,7 @@ def generate_report(results: dict) -> str:
 
                 for word, pages in words.items():
                     if pages:
+                        pages = compress_page_list(pages)
                         page_list = ", ".join(str(p) for p in pages)
                         lines.append(f"   - {word}: {page_list}")
                     else:
@@ -105,13 +122,13 @@ def generate_report(results: dict) -> str:
 # print(read_flagged_words_csvs("../lists"))
 # print(extract_text_from_pdfs("../pdfs"))
 
-results = search_for_words(
-    pdf_texts=extract_text_from_pdfs("../pdfs"),
-    words_to_flag=read_flagged_words_csvs("../lists")
-)
-
-report = generate_report(results=results)
-
-print(report)
+# results = search_for_words(
+#     pdf_texts=extract_text_from_pdfs("../pdfs"),
+#     words_to_flag=read_flagged_words_csvs("../lists")
+# )
+#
+# report = generate_report(results=results)
+#
+# print(report)
 
 
