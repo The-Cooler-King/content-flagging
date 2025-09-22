@@ -78,7 +78,7 @@ def compress_page_list(page_numbers):
     for num, group in groupby(page_numbers):
         count = sum(1 for _ in group)  # count items in the group
         if count > 1:
-            result.append(f"{num}({count})")
+            result.append(f"{num}(x{count})")
         else:
             result.append(str(num))
     return result
