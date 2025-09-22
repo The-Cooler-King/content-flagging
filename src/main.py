@@ -5,21 +5,21 @@ import re
 from itertools import groupby
 
 
-def read_flagged_words_csvs(directory: str):
+def read_flagged_words_csv(directory: str):
     terms = {}
     dir_path = pathlib.Path(directory)
-    # print(f"dir_path: {dir_path}")
 
     for csv_file in dir_path.glob("*.csv"):
-        # print(f"csv file: {csv_file}")
-        category = csv_file.stem  # e.g., "profanity"
-        terms[category] = {}
 
         with open(csv_file, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             for row in reader:
-                if row and row[0].strip() != "":  # skip empty lines
-                    terms[category][row[0].strip().lower()] = row[1]
+                if row:
+                    category = row[0].strip().lower()
+                    sub_category = row[1].strip().lower()
+                    word = row[2].strip().lower()
+                    if category != "" and sub_category != "" and word != "":  # skip empty lines
+                        terms[word] = {'category': category, 'sub_category': sub_category}
 
     return terms
 
@@ -53,20 +53,21 @@ def search_for_words(pdf_texts, words_to_flag):
     for pdf_file, content in pdf_texts.items():
         for page_number, page_text in enumerate(content):
             for word in page_text:
-                for category, word_list in words_to_flag.items():
 
-                    if word in word_list:
+                if word in words_to_flag:
+                    category = words_to_flag[word]['category']
+                    sub_category = words_to_flag[word]['sub_category']
 
-                        if pdf_file not in flags:
-                            flags[pdf_file] = {}
-                        if category not in flags[pdf_file]:
-                            flags[pdf_file][category] = {}
-                        if word_list[word] not in flags[pdf_file][category]:
-                            flags[pdf_file][category][word_list[word]] = {}
-                        if word in flags[pdf_file][category][word_list[word]]:
-                            flags[pdf_file][category][word_list[word]][word].append(page_number + 1)
-                        else:
-                            flags[pdf_file][category][word_list[word]][word] = [page_number + 1]
+                    if pdf_file not in flags:
+                        flags[pdf_file] = {}
+                    if category not in flags[pdf_file]:
+                        flags[pdf_file][category] = {}
+                    if sub_category not in flags[pdf_file][category]:
+                        flags[pdf_file][category][sub_category] = {}
+                    if word in flags[pdf_file][category][sub_category]:
+                        flags[pdf_file][category][sub_category][word].append(page_number + 1)
+                    else:
+                        flags[pdf_file][category][sub_category][word] = [page_number + 1]
 
     return flags
 
@@ -81,10 +82,6 @@ def compress_page_list(page_numbers):
         else:
             result.append(str(num))
     return result
-
-
-nums = [1, 1, 1, 2, 452, 452, 500]
-print(compress_page_list(nums))
 
 
 def generate_report(results: dict) -> str:
@@ -122,13 +119,13 @@ def generate_report(results: dict) -> str:
 # print(read_flagged_words_csvs("../lists"))
 # print(extract_text_from_pdfs("../pdfs"))
 
-# results = search_for_words(
-#     pdf_texts=extract_text_from_pdfs("../pdfs"),
-#     words_to_flag=read_flagged_words_csvs("../lists")
-# )
-#
-# report = generate_report(results=results)
-#
-# print(report)
+results = search_for_words(
+    pdf_texts=extract_text_from_pdfs("../pdfs"),
+    words_to_flag=read_flagged_words_csv("../lists")
+)
+
+report = generate_report(results=results)
+
+print(report)
 
 
